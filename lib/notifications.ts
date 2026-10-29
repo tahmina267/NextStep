@@ -3,6 +3,11 @@ import type * as NotificationsModule from "expo-notifications";
 import dayjs from "dayjs";
 import { CLOSED_STAGES, formatTimeDistance, hasLiveDeadline } from "@/lib/applications";
 import { alarmsSupported, syncAlarms } from "@/lib/alarms";
+import { onReminderTap, requestWebPermission, syncWebReminders } from "@/lib/web-reminders";
+
+// The browser has no expo-notifications: there, reminders are delivered by lib/web-reminders
+// (in-app banner and chime) and alarms ring through lib/alarms.web while the app is open
+const isWeb = Platform.OS === "web";
 
 // Android groups notifications into channels; the user can mute each one in system settings
 const CHANNEL_ID = "reminders";
@@ -29,7 +34,7 @@ const loadNotifications = (): typeof NotificationsModule | null => {
 
 const Notifications = loadNotifications();
 
-export const notificationsSupported = Notifications !== null;
+export const notificationsSupported = Notifications !== null || isWeb;
 
 // Show reminders as a banner even while the app is open (without a handler they stay hidden)
 if (Notifications) {
@@ -43,7 +48,7 @@ if (Notifications) {
     });
 }
 
-type ReminderNotification = {
+export type ReminderNotification = {
     identifier: string;
     date: Date;
     title: string;
@@ -108,6 +113,7 @@ export const getReminderNotifications = (applications: Application[], now = new 
 
 // Android 13+ only shows the permission prompt once a channel exists, so create it first
 export const ensureNotificationPermission = async () => {
+    if (isWeb) return requestWebPermission();
     if (!Notifications) return false;
 
     if (Platform.OS === "android") {
@@ -131,6 +137,12 @@ let queue = Promise.resolve();
 // Makes the phone's scheduled reminders match the applications exactly:
 // cancels everything, then schedules what should be there now
 export const syncReminderNotifications = (applications: Application[]) => {
+    if (isWeb) {
+        const all = getReminderNotifications(applications);
+        syncAlarms(all.filter((n) => n.alarm));
+        syncWebReminders(all.filter((n) => !n.alarm));
+        return queue;
+    }
     if (!Notifications) return queue;
     queue = queue
         .then(async () => {
@@ -174,6 +186,7 @@ export const syncReminderNotifications = (applications: Application[]) => {
 // Calls onOpen with the application id when a reminder is tapped: once for a tap that launched
 // the app from closed, then for every tap while it runs. Returns the function that stops listening.
 export const subscribeToReminderTaps = (onOpen: (applicationId: string) => void) => {
+    if (isWeb) return onReminderTap(onOpen);
     if (!Notifications) return () => {};
 
     const open = (response: NotificationsModule.NotificationResponse) => {

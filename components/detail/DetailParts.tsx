@@ -1,5 +1,6 @@
 import { Fragment, useState, type ReactNode } from 'react'
-import { View, Text, Image, Pressable, Alert, Platform } from 'react-native'
+import { View, Text, Image, Pressable } from 'react-native'
+import { confirmAction, showMessage } from '@/lib/dialog'
 import { useRouter } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useApplications } from '@/lib/applications-store'
@@ -7,19 +8,16 @@ import clsx from 'clsx'
 import dayjs, { type Dayjs } from 'dayjs'
 import { colors } from '@/constants/theme'
 import { icons } from '@/constants/icons'
-import { TYPE_META, formatReminder, getSteps, getTimeDistance } from '@/lib/applications'
+import { TYPE_META, formatReminder, getTimeDistance } from '@/lib/applications'
+import { LINE_NAME } from '@/lib/lines'
+import LineBadge from '@/components/LineBadge'
+import LineTrack from '@/components/LineTrack'
+import { brand, wash } from '@/lib/surfaces'
 
-// Alert buttons do nothing on web, so fall back to the browser's confirm dialog there
-const confirmDelete = (title: string, onConfirm: () => void) => {
+// Phones show the system alert; the web shows the in-app dialog from lib/dialog
+const confirmDelete = async (title: string, onConfirm: () => void) => {
   const message = `“${title}” will be deleted, with its reminders. This can't be undone.`
-  if (Platform.OS === 'web') {
-    if (window.confirm(`Delete application?\n\n${message}`)) onConfirm()
-    return
-  }
-  Alert.alert('Delete application?', message, [
-    { text: 'Cancel', style: 'cancel' },
-    { text: 'Delete', style: 'destructive', onPress: onConfirm },
-  ])
+  if (await confirmAction('Delete application?', message, 'Delete', true)) onConfirm()
 }
 
 // Back on the left, the type in the middle, and Edit / Delete on the right when there's an application
@@ -39,7 +37,7 @@ export const DetailTopBar = ({ type, application }: { type: ApplicationType; app
         deleteApplication(application.id)
         goBack()
       } catch (error) {
-        Alert.alert('Delete failed', error instanceof Error ? error.message : 'Please try again')
+        showMessage('Delete failed', error instanceof Error ? error.message : 'Please try again')
         setIsDeleting(false)
       }
     })
@@ -53,9 +51,16 @@ export const DetailTopBar = ({ type, application }: { type: ApplicationType; app
           <Image source={icons.back} className="size-5" tintColor={colors.primary} />
         </Pressable>
       </View>
-      <View className={clsx('type-chip px-3.5 py-1.5', meta.chipClass)}>
-        <Text className="type-chip-text">{meta.label}</Text>
-      </View>
+      {application ? (
+        <View className="line-pill">
+          <LineBadge id={application.id} size={28} />
+          <Text className="line-pill-text">{LINE_NAME[type]}</Text>
+        </View>
+      ) : (
+        <View className={clsx('type-chip px-3.5 py-1.5', meta.chipClass)}>
+          <Text className="type-chip-text">{meta.label}</Text>
+        </View>
+      )}
       <View className="flex-1 flex-row justify-end gap-2">
         {application && (
           <>
@@ -89,15 +94,15 @@ export const SectionTitle = ({ children }: { children: ReactNode }) => (
   <Text className="section-title" accessibilityRole="header">{children}</Text>
 )
 
-// The navy card with the one date that matters most and an optional countdown badge
+// The board card with the one date that matters most and an optional countdown badge
 export const KeyDateCard = ({ label, value, badge }: { label: string; value: string; badge?: { number: string; unit: string } }) => (
-  <View className="key-card">
+  <View className="key-card border-0" style={wash()}>
     <View className="flex-1">
       <Text className="key-card-label">{label}</Text>
       <Text className="key-card-value">{value}</Text>
     </View>
     {badge && (
-      <View className="key-card-badge">
+      <View className="key-card-badge" style={brand()}>
         <Text className="key-card-badge-number">{badge.number}</Text>
         <Text className="key-card-badge-unit">{badge.unit}</Text>
       </View>
@@ -111,27 +116,8 @@ export const countdownBadge = (date: string, now: Dayjs, future: string, past: s
   return { number: value, unit: [unit, inPast ? past : future].filter(Boolean).join(' ') }
 }
 
-export const StageStepper = ({ application }: { application: Application }) => (
-  <View className="stepper" accessibilityLabel="Progress">
-    {getSteps(application).map((step, index) => (
-      <View key={step.label} className="step">
-        <View
-          className={clsx('step-dot', {
-            'step-dot-done': step.state === 'done',
-            'step-dot-current': step.state === 'current',
-            'step-dot-todo': step.state === 'todo',
-            'step-dot-failed': step.state === 'failed',
-          })}
-        >
-          <Text className={clsx('step-dot-text', step.state === 'done' && 'step-dot-text-done')}>
-            {step.state === 'done' ? '✓' : step.state === 'failed' ? '✕' : index + 1}
-          </Text>
-        </View>
-        <Text className={clsx('step-label', step.state === 'todo' && 'step-label-todo')}>{step.label}</Text>
-      </View>
-    ))}
-  </View>
-)
+// The stages drawn as the application's metro line
+export const StageStepper = ({ application }: { application: Application }) => <LineTrack application={application} />
 
 export const InfoRows = ({ rows }: { rows: { label: string; value?: string | null }[] }) => {
   const visible = rows.filter((row) => row.value)

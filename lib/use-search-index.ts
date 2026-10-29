@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "@/lib/auth-context";
 import { useApplications } from "@/lib/applications-store";
 import { INDEX_BATCH_SIZE, indexApplications, listIndexed, removeFromIndex } from "@/lib/ai";
+import { DEMO_MODE } from "@/lib/demo";
 
 // Waits for a burst of edits to settle before syncing
 const DEBOUNCE_MS = 3000;
@@ -74,7 +75,7 @@ export const useSearchIndex = () => {
     const uid = user?.uid;
 
     useEffect(() => {
-        if (!uid || loading) return;
+        if (DEMO_MODE || !uid || loading) return;
         const timer = setTimeout(() => {
             queue = queue
                 .then(() => syncSearchIndex(uid, applications))

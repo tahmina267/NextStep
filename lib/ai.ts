@@ -1,4 +1,6 @@
 import { auth } from "@/lib/firebase";
+import { DEMO_MODE } from "@/lib/demo";
+import { demoAskQuestion, demoExtractCircular } from "@/lib/ai-demo";
 
 // The Supabase Edge Function in supabase/functions/ai. It holds the Gemini key, so the app never does
 const AI_URL = `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/ai`;
@@ -62,12 +64,13 @@ const callAi = async <T>(action: string, body: Record<string, unknown> = {}): Pr
 };
 
 // Reads a pasted circular and returns the form's fields; the user checks them before saving
+// The demo build has no server: it asks Claude from the page instead (lib/ai-demo)
 export const extractCircular = (text: string) =>
-    callAi<CircularResult>("extract", { text, utcOffsetMinutes: utcOffsetMinutes() });
+    DEMO_MODE ? demoExtractCircular(text, utcOffsetMinutes()) : callAi<CircularResult>("extract", { text, utcOffsetMinutes: utcOffsetMinutes() });
 
 // Brings these applications' search chunks up to date; the server only embeds text that changed
 export const indexApplications = (applications: Application[]) =>
-    callAi("index", {
+    DEMO_MODE ? Promise.resolve() : callAi("index", {
         applications: applications.map((application) => ({
             applicationId: application.id,
             type: application.type,
@@ -78,9 +81,11 @@ export const indexApplications = (applications: Application[]) =>
         })),
     });
 
-export const removeFromIndex = (applicationIds: string[]) => callAi("removeIndex", { applicationIds });
+export const removeFromIndex = (applicationIds: string[]) =>
+    DEMO_MODE ? Promise.resolve() : callAi("removeIndex", { applicationIds });
 
-export const listIndexed = () => callAi<{ applicationIds: string[] }>("listIndexed");
+export const listIndexed = () =>
+    DEMO_MODE ? Promise.resolve({ applicationIds: [] as string[] }) : callAi<{ applicationIds: string[] }>("listIndexed");
 
 // RAG: the server finds the most relevant excerpts and answers from them, citing each as [n].
 // The application list goes along for dates, stages and counts, which don't need a search
@@ -91,7 +96,9 @@ export const askQuestion = (options: {
     // Limits the search to one application
     applicationId?: string;
 }) =>
-    callAi<Answer>("ask", {
+    DEMO_MODE
+        ? demoAskQuestion({ ...options, utcOffsetMinutes: utcOffsetMinutes() })
+        : callAi<Answer>("ask", {
         question: options.question,
         history: options.history,
         applicationId: options.applicationId,

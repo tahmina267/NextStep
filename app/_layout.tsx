@@ -7,6 +7,9 @@ import { AuthProvider } from '@/lib/auth-context'
 import { ApplicationsProvider } from '@/lib/applications-store'
 import { useReminderNotifications } from '@/lib/use-reminder-notifications'
 import { useSearchIndex } from '@/lib/use-search-index'
+import DialogHost from '@/components/DialogHost'
+import { AppearanceProvider } from '@/lib/appearance'
+import ReminderBanner from '@/components/ReminderBanner'
 
 SplashScreen.preventAutoHideAsync();
 
@@ -28,12 +31,13 @@ function SearchIndex() {
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    'sans-light': require('../assets/fonts/PlusJakartaSans-Light.ttf'),
-    'sans-regular': require('../assets/fonts/PlusJakartaSans-Regular.ttf'),
-    'sans-medium': require('../assets/fonts/PlusJakartaSans-Medium.ttf'),
-    'sans-semibold': require('../assets/fonts/PlusJakartaSans-SemiBold.ttf'),
-    'sans-bold': require('../assets/fonts/PlusJakartaSans-Bold.ttf'),
-    'sans-extrabold': require('../assets/fonts/PlusJakartaSans-ExtraBold.ttf'),
+    // Geist: clean, modern and very clear for numbers, which this app is full of (dates, countdowns, counts)
+    'sans-light': require('@expo-google-fonts/geist/300Light/Geist_300Light.ttf'),
+    'sans-regular': require('@expo-google-fonts/geist/400Regular/Geist_400Regular.ttf'),
+    'sans-medium': require('@expo-google-fonts/geist/500Medium/Geist_500Medium.ttf'),
+    'sans-semibold': require('@expo-google-fonts/geist/600SemiBold/Geist_600SemiBold.ttf'),
+    'sans-bold': require('@expo-google-fonts/geist/700Bold/Geist_700Bold.ttf'),
+    'sans-extrabold': require('@expo-google-fonts/geist/800ExtraBold/Geist_800ExtraBold.ttf'),
   });
 
   useEffect(() => {
@@ -47,12 +51,17 @@ export default function RootLayout() {
   }
 
   return (
+    <AppearanceProvider>
     <AuthProvider>
       <ApplicationsProvider>
         <ReminderNotifications />
         <SearchIndex />
         <Stack screenOptions={{headerShown: false}} />
+        {/* Web only: in-app reminder banners and dialogs (phones use system notifications and alerts) */}
+        <ReminderBanner />
+        <DialogHost />
       </ApplicationsProvider>
     </AuthProvider>
+    </AppearanceProvider>
   );
 }

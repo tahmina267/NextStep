@@ -8,10 +8,13 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import images from "@/constants/images";
 import { getAuthErrorMessage } from "@/lib/auth-errors";
+import { useAuth } from "@/lib/auth-context";
+import { DEMO_MODE } from "@/lib/demo";
 const SafeAreaView = styled(RNSafeAreaView)
 
 const SignIn = () => {
   const router = useRouter()
+  const { demoSignIn } = useAuth()
 
   const [emailAddress, setEmailAddress] = useState('')
   const [password, setPassword] = useState('')
@@ -27,7 +30,9 @@ const SignIn = () => {
 
     setIsSubmitting(true)
     try {
-      await signInWithEmailAndPassword(auth, email, password)
+      // The demo accepts any email and password and opens the sample data
+      if (DEMO_MODE) demoSignIn?.(email)
+      else await signInWithEmailAndPassword(auth, email, password)
       router.replace('/')
     } catch (error) {
       const { field, message } = getAuthErrorMessage(error)

@@ -1,67 +1,26 @@
 import { tabs } from '@/constants/data'
 import { Redirect, Tabs } from 'expo-router'
 import { useAuth } from '@/lib/auth-context'
-import { Image, View } from 'react-native'
-import clsx from "clsx"
+import MeniscusTabBar from '@/components/MeniscusTabBar'
 
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { colors, components } from '@/constants/theme'
-
-const tabBar = components.tabBar;
-
+// Each tab's icon by route name, for the custom tab bar
+const ICONS = Object.fromEntries(tabs.map((tab) => [tab.name, tab.icon]))
 
 const TabLayout = () => {
-  const insets = useSafeAreaInsets();
   const { user, initializing } = useAuth();
-  const TabIcon = ({focused, icon}: TabIconProps) => {
-    return(
-    <View className='tabs-icon'>
-      <View className={clsx('tabs-pill', focused && 'tabs-active')}>
-        {/* Navy icon on the orange active pill, cream icon on the navy bar */}
-        <Image
-        source={icon} resizeMode='contain' className = "tabs-glyph"
-        tintColor={focused ? colors.primary : colors.background} />
-      </View>
-    </View>)
-  }
 
   if (initializing) return null;
   if (!user) return <Redirect href="/sign-in" />;
 
   return (
-    <Tabs screenOptions = {{headerShown: false,
-                            tabBarShowLabel: false,
-                            tabBarStyle: {
-                              position: 'absolute',
-                              bottom: Math.max(insets.bottom,tabBar.horizontalInset),
-                              height: tabBar.height,
-                              marginHorizontal: tabBar.horizontalInset,
-                              borderRadius: tabBar.radius,
-                              backgroundColor: colors.primary,
-                              borderTopWidth: 0,
-                              elevation:0
-                            },
-                            tabBarItemStyle: {
-                                paddingVertical: tabBar.height/2 - tabBar.iconFrame/1.6
-                            },
-                            tabBarIconStyle: {
-                              width: tabBar.iconFrame,
-                              height: tabBar.iconFrame,
-                              alignItems: 'center'
-                            },
-    }}>
+    <Tabs
+      screenOptions={{ headerShown: false }}
+      tabBar={(props) => <MeniscusTabBar {...props} icons={ICONS} />}
+    >
         {tabs.map((tab)=>(
-          <Tabs.Screen  key= {tab.name}
-                        name={tab.name} 
-                        options={{
-                          title: tab.title,
-                          tabBarIcon: ({focused}) => (
-                              <TabIcon focused={focused} icon = {tab.icon}></TabIcon>
-                          ) 
-                        }} />
+          <Tabs.Screen key={tab.name} name={tab.name} options={{ title: tab.title }} />
         ))}
     </Tabs>
-    
   )
 }
 

@@ -9,12 +9,15 @@ import { auth } from "@/lib/firebase";
 import images from "@/constants/images";
 import { getAuthErrorMessage } from "@/lib/auth-errors";
 import { saveUserProfile } from "@/lib/database";
+import { useAuth } from "@/lib/auth-context";
+import { DEMO_MODE } from "@/lib/demo";
 const SafeAreaView = styled(RNSafeAreaView)
 
 const MIN_PASSWORD_LENGTH = 6
 
 const SignUp = () => {
   const router = useRouter()
+  const { demoSignIn } = useAuth()
 
   const [emailAddress, setEmailAddress] = useState('')
   const [password, setPassword] = useState('')
@@ -32,8 +35,13 @@ const SignUp = () => {
 
     setIsSubmitting(true)
     try {
-      const { user } = await createUserWithEmailAndPassword(auth, email, password)
-      await saveUserProfile(user)
+      if (DEMO_MODE) {
+        // The demo creates no account: it signs in with this email on the sample data
+        demoSignIn?.(email, email.split('@')[0])
+      } else {
+        const { user } = await createUserWithEmailAndPassword(auth, email, password)
+        await saveUserProfile(user)
+      }
       router.replace('/')
     } catch (error) {
       const { field, message } = getAuthErrorMessage(error)

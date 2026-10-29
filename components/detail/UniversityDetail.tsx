@@ -1,6 +1,6 @@
 import { View, Text, Image, Pressable } from 'react-native'
 import { useRouter } from 'expo-router'
-import * as WebBrowser from 'expo-web-browser'
+import { openLink } from '@/lib/dialog'
 import clsx from 'clsx'
 import dayjs, { type Dayjs } from 'dayjs'
 import { colors } from '@/constants/theme'
@@ -69,7 +69,7 @@ const UniversityDetail = ({ university, now }: { university: UniversityApplicati
 
       {university.link ? (
         <View className="detail-actions">
-          <Pressable className="action-primary" onPress={() => WebBrowser.openBrowserAsync(university.link!)} accessibilityRole="link">
+          <Pressable className="action-primary" onPress={() => openLink(university.link!)} accessibilityRole="link">
             <Image source={icons.link} className="size-4.5" tintColor={colors.primary} />
             <Text className="action-primary-text">Open program page</Text>
           </Pressable>

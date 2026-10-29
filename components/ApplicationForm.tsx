@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { View, Text, TextInput, Pressable, ScrollView, KeyboardAvoidingView, Keyboard, Image, Switch, Alert, ActivityIndicator } from 'react-native'
+import { View, Text, TextInput, Pressable, ScrollView, KeyboardAvoidingView, Keyboard, Image, Switch, ActivityIndicator } from 'react-native'
+import { showMessage } from '@/lib/dialog'
 import { Stack, useRouter } from 'expo-router'
 import { styled } from 'nativewind'
 import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context'
@@ -10,6 +11,10 @@ import { FOLLOW_UP_DAYS, STAGES_BY_TYPE, STAGE_META, TYPE_META, getReminderPrese
 import DateTimeField from '@/components/DateTimeField'
 import { ensureAlarmPermissions } from '@/lib/alarms'
 import { MAX_CIRCULAR_CHARS, extractCircular, type CircularFields } from '@/lib/ai'
+import { useApplications } from '@/lib/applications-store'
+import Ionicons from '@expo/vector-icons/Ionicons'
+import { brand } from '@/lib/surfaces'
+import { LINE_COLORS, getLines, lineTextColor } from '@/lib/lines'
 
 const SafeAreaView = styled(RNSafeAreaView)
 
@@ -120,6 +125,11 @@ const ApplicationForm = ({ application, onSave }: Props) => {
     application?.type === 'professor' && application.sentAt ? new Date(application.sentAt) : new Date(),
   )
   const [notes, setNotes] = useState(application?.notes ?? '')
+  // The line colour: what this application already shows, or the next automatic colour for a new one
+  const { applications } = useApplications()
+  const [color, setColor] = useState(() =>
+    application ? getLines(applications)[application.id]?.color ?? LINE_COLORS[0] : LINE_COLORS[applications.length % LINE_COLORS.length],
+  )
   const [showErrors, setShowErrors] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   // "Fill from a circular": the pasted text, and whether the AI is reading it or has filled the form
@@ -272,6 +282,7 @@ const ApplicationForm = ({ application, onSave }: Props) => {
       notes: notes.trim() || undefined,
       deadline: hasDeadline ? deadline.toISOString() : null,
       reminders: buildReminders(),
+      color,
     }
     const firstEvent = (eventTitle: string, date = timestamp): TimelineEvent[] => [{ id: 't1', date, title: eventTitle }]
 
@@ -327,7 +338,7 @@ const ApplicationForm = ({ application, onSave }: Props) => {
       const input = buildInput()
       await onSave(!isEditing && circular ? { ...input, circular } : input)
     } catch (error) {
-      Alert.alert('Could not save', error instanceof Error ? error.message : 'Please try again')
+      showMessage('Could not save', error instanceof Error ? error.message : 'Please try again')
     } finally {
       setIsSaving(false)
     }
@@ -349,8 +360,9 @@ const ApplicationForm = ({ application, onSave }: Props) => {
         <ScrollView ref={scrollRef} contentContainerClassName="gap-4 px-5 py-4" keyboardShouldPersistTaps="handled">
           {/* AI fills the form from a pasted circular; the user still checks everything and saves */}
           {!isEditing && !circularOpen && (
-            <Pressable className="auth-secondary-button" onPress={() => setCircularOpen(true)} accessibilityRole="button">
-              <Text className="auth-secondary-button-text">✨ Fill from a circular</Text>
+            <Pressable className="h-13 flex-row items-center justify-center gap-2 rounded-[18px]" style={brand()} onPress={() => setCircularOpen(true)} accessibilityRole="button">
+              <Ionicons name="sparkles" size={17} color="#FFFFFF" />
+              <Text className="text-base font-sans-bold text-white">Fill from a circular</Text>
             </Pressable>
           )}
           {circularOpen && (
@@ -417,6 +429,27 @@ const ApplicationForm = ({ application, onSave }: Props) => {
               )
             })}
           </View>
+
+          <Field label="Colour">
+            <View className="flex-row flex-wrap items-center gap-2.5" accessibilityRole="radiogroup">
+              {LINE_COLORS.map((option) => {
+                const isActive = option === color
+                return (
+                  <Pressable
+                    key={option}
+                    onPress={() => setColor(option)}
+                    className="size-10 items-center justify-center rounded-full"
+                    style={{ backgroundColor: option, borderWidth: 3, borderColor: isActive ? colors.primary : colors.card }}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: isActive }}
+                    accessibilityLabel={`Colour ${option}`}
+                  >
+                    {isActive && <Text className="text-sm font-sans-extrabold" style={{ color: lineTextColor(option) }}>✓</Text>}
+                  </Pressable>
+                )
+              })}
+            </View>
+          </Field>
 
           <Field label={copy.title} error={showErrors ? errors.title : ''}>
             <TextInput
@@ -544,6 +577,8 @@ const ApplicationForm = ({ application, onSave }: Props) => {
               onValueChange={setHasDeadline}
               trackColor={{ true: colors.accent, false: colors.muted }}
               thumbColor={colors.card}
+              // react-native-web paints the knob of an "on" switch teal unless told otherwise
+              {...({ activeThumbColor: colors.card } as object)}
               accessibilityLabel="Has a deadline"
             />
           </View>
@@ -553,92 +588,138 @@ const ApplicationForm = ({ application, onSave }: Props) => {
             </Field>
           )}
 
-          <Field label="Remind me" error={showErrors ? errors.reminders : ''}>
-            <View className="reminder-row">
-              {presets.map((preset) => {
-                const isOn = presetKeys.includes(preset.key)
-                return (
-                  <Pressable
-                    key={preset.key}
-                    className={clsx('reminder-chip', isOn && 'reminder-chip-on')}
-                    onPress={() => togglePreset(preset.key)}
-                    accessibilityRole="checkbox"
-                    accessibilityState={{ checked: isOn }}
-                  >
-                    <Text className="reminder-chip-text">{preset.label}</Text>
-                  </Pressable>
-                )
-              })}
-              {customTimes.map((time) => (
-                <Pressable
-                  key={time.getTime()}
-                  className="reminder-chip reminder-chip-on"
-                  onPress={() => setCustomTimes((current) => current.filter((t) => t !== time))}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Remove reminder at ${dayjs(time).format(CUSTOM_FORMAT)}`}
-                >
-                  <Text className="reminder-chip-text">{dayjs(time).format(CUSTOM_FORMAT)}  ✕</Text>
-                </Pressable>
-              ))}
-              {!customDraft && (!deadlineDay || deadlineDay.isAfter(now.add(1, 'minute'))) && (
-                <Pressable className="reminder-chip" onPress={startCustom} accessibilityRole="button">
-                  <Text className="reminder-chip-text">+ Custom</Text>
-                </Pressable>
-              )}
-            </View>
-            {customDraft && (
-              <View className="mt-2.5 gap-2.5">
-                <DateTimeField label="Custom reminder" value={customDraft} onChange={setCustomDraft} />
-                {draftError ? <Text className="auth-error">{draftError}</Text> : null}
-                <View className="flex-row gap-2">
-                  <Pressable className="reminder-chip" onPress={() => setCustomDraft(null)} accessibilityRole="button">
-                    <Text className="reminder-chip-text">Cancel</Text>
-                  </Pressable>
-                  <Pressable
-                    className={clsx('reminder-chip reminder-chip-on', draftError && 'opacity-50')}
-                    onPress={addCustom}
-                    disabled={!!draftError}
-                    accessibilityRole="button"
-                    accessibilityState={{ disabled: !!draftError }}
-                  >
-                    <Text className="reminder-chip-text">Add reminder</Text>
-                  </Pressable>
-                </View>
-              </View>
-            )}
-            {pickedReminders.length > 0 && (
-              <View className="mt-2.5 gap-2">
-                {pickedReminders.map((item) => {
-                  const isAlarm = alarmKeys.includes(item.key)
-                  return (
-                    <View key={item.key} className="flex-row items-center gap-2">
-                      <Text className="auth-helper flex-1" numberOfLines={1}>{item.label}</Text>
-                      <View className="flex-row gap-1.5" accessibilityRole="radiogroup">
+          {/* Reminders as one card: quick picks, the reminders you've chosen (each notification or alarm),
+              and a custom time with a plain hint about which times are allowed */}
+          <Field label="Reminders" error={showErrors ? errors.reminders : ''}>
+            <View className="gap-3 rounded-[20px] border border-border bg-card p-3.5">
+              {presets.length > 0 && (
+                <View className="gap-2">
+                  <Text className="text-xs font-sans-bold uppercase tracking-[1px] text-muted-foreground">Quick picks</Text>
+                  <View className="flex-row flex-wrap gap-2">
+                    {presets.map((preset) => {
+                      const isOn = presetKeys.includes(preset.key)
+                      return (
                         <Pressable
-                          className={clsx('reminder-chip', !isAlarm && 'reminder-chip-on')}
-                          onPress={() => setAlarm(item.key, false)}
-                          accessibilityRole="radio"
-                          accessibilityState={{ selected: !isAlarm }}
-                          accessibilityLabel={`${item.label}: notification only`}
+                          key={preset.key}
+                          className="h-10 flex-row items-center gap-1.5 rounded-full px-3.5"
+                          style={{ backgroundColor: isOn ? colors.job : colors.muted, borderWidth: 1.5, borderColor: isOn ? colors.accent : 'transparent' }}
+                          onPress={() => togglePreset(preset.key)}
+                          accessibilityRole="checkbox"
+                          accessibilityState={{ checked: isOn }}
                         >
-                          <Text className="reminder-chip-text">Notification</Text>
+                          <Ionicons name={isOn ? 'checkmark-circle' : 'add-circle-outline'} size={17} color={isOn ? colors.accent : colors.mutedForeground} />
+                          <Text className="text-sm font-sans-bold text-primary">{preset.label}</Text>
                         </Pressable>
+                      )
+                    })}
+                  </View>
+                </View>
+              )}
+
+              {pickedReminders.length > 0 && (
+                <View className="gap-2">
+                  <Text className="text-xs font-sans-bold uppercase tracking-[1px] text-muted-foreground">
+                    Your reminders · {pickedReminders.length}
+                  </Text>
+                  {pickedReminders.map((item) => {
+                    const isAlarm = alarmKeys.includes(item.key)
+                    const isPreset = presetKeys.includes(item.key)
+                    const remove = () =>
+                      isPreset
+                        ? togglePreset(item.key)
+                        : setCustomTimes((current) => current.filter((time) => customKey(time) !== item.key))
+                    return (
+                      <View key={item.key} className="flex-row items-center gap-2.5 rounded-[14px] bg-muted px-2.5 py-2">
+                        <View className="size-8 items-center justify-center rounded-full bg-card">
+                          <Ionicons name={isAlarm ? 'alarm' : 'notifications'} size={16} color={isAlarm ? colors.urgent : colors.accent} />
+                        </View>
+                        <Text className="min-w-0 flex-1 text-sm font-sans-bold text-primary" numberOfLines={1}>{item.label}</Text>
+                        {/* Notify or ring like an alarm */}
+                        <View className="flex-row rounded-full bg-card p-0.5" accessibilityRole="radiogroup">
+                          {[false, true].map((alarm) => {
+                            const isActive = isAlarm === alarm
+                            return (
+                              <Pressable
+                                key={String(alarm)}
+                                className="h-8 flex-row items-center gap-1 rounded-full px-2.5"
+                                style={{ backgroundColor: isActive ? (alarm ? colors.urgent : colors.accent) : 'transparent' }}
+                                onPress={() => setAlarm(item.key, alarm)}
+                                accessibilityRole="radio"
+                                accessibilityState={{ selected: isActive }}
+                                accessibilityLabel={`${item.label}: ${alarm ? 'alarm' : 'notification'}`}
+                              >
+                                <Text className="text-xs font-sans-bold" style={{ color: isActive ? '#FFFFFF' : colors.mutedForeground }}>
+                                  {alarm ? 'Alarm' : 'Notify'}
+                                </Text>
+                              </Pressable>
+                            )
+                          })}
+                        </View>
                         <Pressable
-                          className={clsx('reminder-chip', isAlarm && 'reminder-chip-on')}
-                          onPress={() => setAlarm(item.key, true)}
-                          accessibilityRole="radio"
-                          accessibilityState={{ selected: isAlarm }}
-                          accessibilityLabel={`${item.label}: notification and alarm`}
+                          className="size-8 items-center justify-center rounded-full"
+                          onPress={remove}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Remove reminder ${item.label}`}
+                          hitSlop={6}
                         >
-                          <Text className="reminder-chip-text">+ Alarm</Text>
+                          <Ionicons name="close" size={18} color={colors.mutedForeground} />
                         </Pressable>
                       </View>
-                    </View>
-                  )
-                })}
-              </View>
-            )}
-            {hasDeadline && <Text className="auth-helper">You&apos;ll always be notified when the deadline passes.</Text>}
+                    )
+                  })}
+                </View>
+              )}
+
+              {customDraft ? (
+                <View className="gap-2.5 rounded-[16px] bg-muted p-3">
+                  <Text className="text-sm font-sans-bold text-primary">Custom time</Text>
+                  <DateTimeField label="Custom reminder" value={customDraft} onChange={setCustomDraft} />
+                  <View className="flex-row items-center gap-1.5">
+                    <Ionicons name={draftError ? 'alert-circle' : 'time-outline'} size={14} color={draftError ? colors.destructive : colors.mutedForeground} />
+                    <Text className="flex-1 text-xs font-sans-medium" style={{ color: draftError ? colors.destructive : colors.mutedForeground }}>
+                      {deadlineDay
+                        ? `Pick a time between now and the deadline (${deadlineDay.format(CUSTOM_FORMAT)})`
+                        : 'Pick any time from now on'}
+                    </Text>
+                  </View>
+                  <View className="flex-row gap-2">
+                    <Pressable className="h-11 flex-1 items-center justify-center rounded-[14px] border border-border bg-card" onPress={() => setCustomDraft(null)} accessibilityRole="button">
+                      <Text className="text-sm font-sans-bold text-primary">Cancel</Text>
+                    </Pressable>
+                    <Pressable
+                      className={clsx('h-11 flex-1 flex-row items-center justify-center gap-1.5 rounded-[14px]', draftError && 'opacity-40')}
+                      style={brand()}
+                      onPress={addCustom}
+                      disabled={!!draftError}
+                      accessibilityRole="button"
+                      accessibilityState={{ disabled: !!draftError }}
+                    >
+                      <Ionicons name="checkmark" size={17} color="#FFFFFF" />
+                      <Text className="text-sm font-sans-bold text-white">Add reminder</Text>
+                    </Pressable>
+                  </View>
+                </View>
+              ) : (
+                (!deadlineDay || deadlineDay.isAfter(now.add(1, 'minute'))) && (
+                  <Pressable
+                    className="h-11 flex-row items-center justify-center gap-1.5 rounded-[14px]"
+                    style={{ borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.border }}
+                    onPress={startCustom}
+                    accessibilityRole="button"
+                  >
+                    <Ionicons name="add" size={18} color={colors.accent} />
+                    <Text className="text-sm font-sans-bold" style={{ color: colors.accent }}>Add a custom time</Text>
+                  </Pressable>
+                )
+              )}
+
+              {hasDeadline && (
+                <View className="flex-row items-center gap-1.5 border-t border-border pt-3">
+                  <Ionicons name="information-circle-outline" size={15} color={colors.mutedForeground} />
+                  <Text className="flex-1 text-xs font-sans-medium text-muted-foreground">You&apos;ll always be notified when the deadline passes.</Text>
+                </View>
+              )}
+            </View>
           </Field>
 
           <Field label="Notes">

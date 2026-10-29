@@ -1,4 +1,6 @@
-import { View, Text, Pressable, Linking } from 'react-native'
+import { View, Text, Pressable } from 'react-native'
+import { openLink } from '@/lib/dialog'
+import { wash } from '@/lib/surfaces'
 import { useRouter } from 'expo-router'
 import clsx from 'clsx'
 import dayjs, { type Dayjs } from 'dayjs'
@@ -20,7 +22,7 @@ const professorInitials = (name: string) => getInitials(name.replace(/^(dr|prof|
 
 const openEmail = (to: string, subject?: string) => {
   const query = subject ? `?subject=${encodeURIComponent(subject)}` : ''
-  return Linking.openURL(`mailto:${to}${query}`)
+  return openLink(`mailto:${to}${query}`)
 }
 
 // Headline, colour and main action for where this conversation stands
@@ -31,20 +33,20 @@ const getStatus = (professor: ProfessorApplication, now: Dayjs) => {
   switch (professor.stage) {
     case 'replied':
       return {
-        cardClass: 'bg-professor',
+        cardClass: 'border-professor-strong',
         title: 'Replied',
         badge: professor.repliedAt ? dayjs(professor.repliedAt).format('MMM D') : undefined,
         text: 'Keep the conversation going and mention this lab in your application.',
         action: { label: 'Reply', subject: followUpSubject },
       }
     case 'declined':
-      return { cardClass: 'bg-muted', title: 'Declined', text: 'Not taking students right now. Try other labs.', action: null }
+      return { cardClass: '', title: 'Declined', text: 'Not taking students right now. Try other labs.', action: null }
     case 'draft':
-      return { cardClass: 'bg-muted', title: 'Not sent yet', text: 'Write a short email about why their research interests you.', action: { label: 'Write email', subject: professor.emailSubject } }
+      return { cardClass: '', title: 'Not sent yet', text: 'Write a short email about why their research interests you.', action: { label: 'Write email', subject: professor.emailSubject } }
     default:
       if (needsFollowUp(professor, now)) {
         return {
-          cardClass: 'bg-accent',
+          cardClass: 'border-accent',
           title: 'No reply yet',
           badge: 'Follow-up due',
           text: `${sent} A short, polite follow-up often gets a reply.`,
@@ -52,7 +54,7 @@ const getStatus = (professor: ProfessorApplication, now: Dayjs) => {
         }
       }
       return {
-        cardClass: 'bg-muted',
+        cardClass: '',
         title: 'Waiting for a reply',
         badge: professor.followUpAt ? `Follow up ${dayjs(professor.followUpAt).format('MMM D')}` : undefined,
         text: sent,
@@ -84,7 +86,7 @@ const ProfessorDetail = ({ professor, now }: { professor: ProfessorApplication; 
         </View>
       </View>
 
-      <View className={clsx('status-card', status.cardClass)}>
+      <View className={clsx('status-card', status.cardClass)} style={wash()}>
         <View className="status-head">
           <Text className="status-title">{status.title}</Text>
           {status.badge && (

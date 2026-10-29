@@ -70,7 +70,7 @@ const AlarmScreen = () => {
       </View>
 
       <View className="w-full gap-3">
-        <Pressable className="items-center rounded-full bg-accent py-5" onPress={stop} accessibilityRole="button">
+        <Pressable className="items-center rounded-full bg-card py-5" onPress={stop} accessibilityRole="button">
           <Text className="text-lg font-sans-bold text-primary">Stop</Text>
         </Pressable>
         <Pressable className="items-center rounded-full border border-background/40 py-5" onPress={snooze} accessibilityRole="button">

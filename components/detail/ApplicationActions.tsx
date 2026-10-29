@@ -1,6 +1,9 @@
-import { View, Text, Pressable, Alert } from 'react-native'
+import { View, Text, Pressable } from 'react-native'
+import { showMessage } from '@/lib/dialog'
 import clsx from 'clsx'
 import { router } from 'expo-router'
+import Ionicons from '@expo/vector-icons/Ionicons'
+import { brand } from '@/lib/surfaces'
 import { useApplications } from '@/lib/applications-store'
 import { STAGES_BY_TYPE, STAGE_META } from '@/lib/applications'
 import { SectionTitle } from '@/components/detail/DetailParts'
@@ -16,7 +19,7 @@ const ApplicationActions = ({ application }: { application: Application }) => {
     try {
       updateApplication(application.id, { stage } as Partial<ApplicationInput>)
     } catch (error) {
-      Alert.alert('Update failed', errorMessage(error))
+      showMessage('Update failed', errorMessage(error))
     }
   }
 
@@ -41,11 +44,13 @@ const ApplicationActions = ({ application }: { application: Application }) => {
       </View>
       {/* The chat, searching only this application's circular and notes */}
       <Pressable
-        className="auth-secondary-button mt-3"
+        className="mt-3 h-13 flex-row items-center justify-center gap-2 rounded-[18px]"
+        style={brand()}
         onPress={() => router.push({ pathname: '/ask', params: { applicationId: application.id } })}
         accessibilityRole="button"
       >
-        <Text className="auth-secondary-button-text">✨ Ask about this application</Text>
+        <Ionicons name="sparkles" size={17} color="#FFFFFF" />
+        <Text className="text-base font-sans-bold text-white">Ask about this application</Text>
       </Pressable>
     </View>
   )

@@ -82,10 +82,10 @@ export const FOLLOW_UP_DAYS = 7;
 export type ApplicationFilter = "all" | ApplicationType;
 
 export const APPLICATION_FILTERS: { key: ApplicationFilter; label: string; chipClass: string }[] = [
-    { key: "all", label: "All", chipClass: "bg-card" },
-    { key: "job", label: "Jobs", chipClass: "bg-job" },
-    { key: "university", label: "University", chipClass: "bg-university" },
-    { key: "professor", label: "Prof", chipClass: "bg-professor" },
+    { key: "all", label: "All", chipClass: "" },
+    { key: "job", label: "Jobs", chipClass: "" },
+    { key: "university", label: "University", chipClass: "" },
+    { key: "professor", label: "Prof", chipClass: "" },
 ];
 
 // Stages that mean the application or email hasn't been sent yet

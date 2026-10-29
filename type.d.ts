@@ -99,6 +99,8 @@ declare global {
         link?: string;
         deadline: ISODateString | null;
         notes?: string;
+        // The line colour the user picked (a hex like "#1E6BFF"); without one the app assigns a colour
+        color?: string;
         circular?: CircularSource;
         reminders: Reminder[];
         timeline: TimelineEvent[];

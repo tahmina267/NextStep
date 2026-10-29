@@ -9,16 +9,15 @@ import { useApplications } from '@/lib/applications-store'
 import { icons } from '@/constants/icons'
 import { colors } from '@/constants/theme'
 import { getCalendarEvents, getMonthGrid, groupEventsByDay } from '@/lib/applications'
+import { pale, wash } from '@/lib/surfaces'
 
 const SafeAreaView = styled(RNSafeAreaView);
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-const TYPE_COLORS: Record<ApplicationType, string> = {
-  job: colors.jobStrong,
-  university: colors.universityStrong,
-  professor: colors.professorStrong,
-}
+// Read when drawn, so they follow light and dark mode
+const typeColor = (type: ApplicationType) =>
+  ({ job: colors.jobStrong, university: colors.universityStrong, professor: colors.professorStrong })[type]
 
 const LEGEND: { type: ApplicationType; label: string }[] = [
   { type: 'job', label: 'Job' },
@@ -54,7 +53,7 @@ const Calendar = () => {
           </View>
         </View>
 
-        <View className="cal-card">
+        <View className="cal-card border-0" style={wash()}>
           <View className="cal-weekdays">
             {WEEKDAYS.map((day) => (
               <Text key={day} className="cal-weekday">{day}</Text>
@@ -83,7 +82,7 @@ const Calendar = () => {
                     </Text>
                     <View className="cal-dots">
                       {dotTypes.map((type) => (
-                        <View key={type} className="cal-dot" style={{ backgroundColor: TYPE_COLORS[type] }} />
+                        <View key={type} className="cal-dot" style={{ backgroundColor: typeColor(type) }} />
                       ))}
                     </View>
                   </Pressable>
@@ -96,34 +95,51 @@ const Calendar = () => {
         <View className="cal-legend">
           {LEGEND.map((item) => (
             <View key={item.type} className="cal-legend-item">
-              <View className="cal-legend-dot" style={{ backgroundColor: TYPE_COLORS[item.type] }} />
+              <View className="cal-legend-dot" style={{ backgroundColor: typeColor(item.type) }} />
               <Text className="cal-legend-text">{item.label}</Text>
             </View>
           ))}
         </View>
 
-        <View className="cal-agenda">
-          <Text className="cal-agenda-title">
-            {selected.format('ddd, MMM D')}{isSelectedToday ? ' · Today' : ''}
-          </Text>
+        {/* The chosen day, styled like This week on Home */}
+        <View className="mt-4.5 gap-2 rounded-[26px] p-3" style={wash()}>
+          <View className="flex-row items-center justify-between px-1.5 pb-1 pt-0.5">
+            <Text className="text-base font-sans-extrabold text-primary">
+              {selected.format('dddd')}{isSelectedToday ? ' · Today' : ''}
+            </Text>
+            <View className="rounded-full bg-card/80 px-3 py-1">
+              <Text className="text-xs font-sans-bold text-primary">{selected.format('MMM D')}</Text>
+            </View>
+          </View>
           {agenda.length > 0 ? (
-            agenda.map((event) => (
-              <Pressable
-                key={event.id}
-                className="cal-event"
-                onPress={() => router.push({ pathname: '/application/[id]', params: { id: event.applicationId } })}
-                accessibilityRole="button"
-              >
-                <View className="cal-event-bar" style={{ backgroundColor: TYPE_COLORS[event.type] }} />
-                <View className="cal-event-copy">
-                  <Text className="cal-event-title" numberOfLines={1}>{event.title}</Text>
-                  <Text className="cal-event-meta" numberOfLines={1}>{event.meta}</Text>
-                </View>
-                <Text className="cal-event-time">{dayjs(event.date).format('h:mm A')}</Text>
-              </Pressable>
-            ))
+            agenda.map((event) => {
+              const color = typeColor(event.type)
+              const time = dayjs(event.date)
+              return (
+                <Pressable
+                  key={event.id}
+                  className="flex-row items-center gap-3 rounded-[18px] bg-card p-2.5"
+                  onPress={() => router.push({ pathname: '/application/[id]', params: { id: event.applicationId } })}
+                  accessibilityRole="button"
+                >
+                  <View className="h-12 flex-row items-baseline justify-center gap-1 rounded-[14px] px-3 pt-3.5" style={{ backgroundColor: pale(color) }}>
+                    <Text className="text-[15px] font-sans-extrabold text-primary">{time.format('h:mm')}</Text>
+                    <Text className="text-[11px] font-sans-extrabold" style={{ color }}>{time.format('A')}</Text>
+                  </View>
+                  <View className="min-w-0 flex-1">
+                    <Text className="text-[15px] font-sans-bold text-primary" numberOfLines={1}>{event.title}</Text>
+                    <Text className="text-xs font-sans-medium text-muted-foreground" numberOfLines={1}>{event.meta}</Text>
+                  </View>
+                  <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: color }}>
+                    <Text className="text-[11px] font-sans-bold text-white">{LEGEND.find((item) => item.type === event.type)?.label}</Text>
+                  </View>
+                </Pressable>
+              )
+            })
           ) : (
-            <Text className="home-empty-state">Nothing due. Tap a day with a dot.</Text>
+            <View className="rounded-[18px] bg-card p-4">
+              <Text className="text-sm font-sans-medium text-muted-foreground">Nothing due. Tap a day with a dot.</Text>
+            </View>
           )}
         </View>
       </ScrollView>

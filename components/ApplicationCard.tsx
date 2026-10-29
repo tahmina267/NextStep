@@ -1,39 +1,34 @@
-import { View, Text, Image } from 'react-native'
+import { View, Text } from 'react-native'
 import clsx from 'clsx'
 import type { Dayjs } from 'dayjs'
+import { getCardDate } from '@/lib/applications'
+import LineBadge from '@/components/LineBadge'
+import LineTrack from '@/components/LineTrack'
 import { colors } from '@/constants/theme'
-import { icons } from '@/constants/icons'
-import { STAGE_META, STAGE_TONE_CLASSES, TYPE_META, getCardDate } from '@/lib/applications'
+import { useLine } from '@/lib/lines'
+import { hot, tintedCard } from '@/lib/surfaces'
 
+// One line in the list: code, name and the date that matters, with a small route map underneath
 const ApplicationCard = ({ application, now }: { application: Application; now: Dayjs }) => {
-  const type = TYPE_META[application.type]
-  const stage = STAGE_META[application.stage]
-  const tone = STAGE_TONE_CLASSES[stage.tone]
   const date = getCardDate(application, now)
+  const line = useLine(application.id)
 
   return (
-    <View className="app-card">
-      <View className={clsx('app-card-icon', type.chipClass)}>
-        <Image source={type.icon} className="size-5" tintColor={colors.primary} />
-      </View>
-      <View className="app-card-body">
-        <Text className="app-card-title" numberOfLines={1}>{application.title}</Text>
-        <Text className="app-card-org" numberOfLines={1}>{application.organization}</Text>
-        <View className="app-card-footer">
-          <View className={clsx('stage-pill', tone.pill)}>
-            <Text className={clsx('stage-pill-text', tone.text)}>{stage.label}</Text>
-          </View>
-          {date && (
-            <View className="app-card-date">
-              <Image
-                source={icons.clock}
-                className="size-3.5"
-                tintColor={date.urgent ? colors.urgent : colors.mutedForeground}
-              />
-              <Text className={clsx('app-card-date-text', date.urgent && 'app-card-date-urgent')}>{date.label}</Text>
-            </View>
-          )}
+    <View className="rounded-[20px] border border-border p-3.5" style={tintedCard(line.color)}>
+      <View className="flex-row items-center gap-3">
+        <LineBadge id={application.id} />
+        <View className="app-card-body">
+          <Text className="app-card-title" numberOfLines={1}>{application.title}</Text>
+          <Text className="app-card-org" numberOfLines={1}>{application.organization}</Text>
         </View>
+        {date && (
+          <View className="rounded-full px-2.5 py-1" style={date.urgent ? hot() : { backgroundColor: colors.muted }}>
+            <Text className={clsx('text-[11px] font-sans-bold', date.urgent ? 'text-white' : 'text-primary')}>{date.label}</Text>
+          </View>
+        )}
+      </View>
+      <View className="ml-11.5 mt-3">
+        <LineTrack application={application} compact />
       </View>
     </View>
   )

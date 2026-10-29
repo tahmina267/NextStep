@@ -5,24 +5,25 @@
 @import "nativewind/theme";
 
 @theme {
-    --color-background: #fff9e3;
-    --color-foreground: #081126;
-    --color-card: #fff8e7;
-    --color-muted: #f6eecf;
-    --color-muted-foreground: rgba(0, 0, 0, 0.6);
-    --color-primary: #081126;
-    --color-accent: #ea7a53;
-    --color-border: rgba(0, 0, 0, 0.1);
+    --color-background: #F3F3F5;
+    --color-foreground: #0E0E10;
+    --color-card: #FFFFFF;
+    --color-muted: #EEEEF1;
+    --color-muted-foreground: #6E6E76;
+    --color-primary: #0E0E10;
+    --color-on-primary: #FFFFFF;
+    --color-accent: #1E6BFF;
+    --color-border: #E6E6EA;
     --color-success: #16a34a;
     --color-destructive: #dc2626;
     --color-subscription: #8fd1bd;
-    --color-job: #b8d4e3;
-    --color-university: #e8def8;
-    --color-professor: #b8e8d0;
-    --color-urgent: #a8431c;
-    --color-job-strong: #3b78a8;
-    --color-university-strong: #7a55b8;
-    --color-professor-strong: #2f8a5f;
+    --color-job: #DCE9FF;
+    --color-university: #F3E3FB;
+    --color-professor: #DDF5CF;
+    --color-urgent: #B624C4;
+    --color-job-strong: #3A6CCE;
+    --color-university-strong: #7A59C3;
+    --color-professor-strong: #008A39;
 
     --spacing-0: 0px;
     --spacing-1: 4px;
@@ -62,7 +63,7 @@
     }
 
     .tabs-active {
-        @apply bg-accent;
+        @apply bg-primary;
     }
 
     .tabs-glyph {
@@ -90,11 +91,11 @@
     }
 
     .home-icon-button {
-        @apply size-11 items-center justify-center rounded-full border border-black/15;
+        @apply size-10 items-center justify-center rounded-full border border-border bg-card;
     }
 
     .home-icon-button-primary {
-        @apply size-11 items-center justify-center rounded-full bg-primary;
+        @apply size-10 items-center justify-center rounded-full bg-primary;
     }
 
     .home-icon-dot {
@@ -206,7 +207,7 @@
     }
 
     .apps-title {
-        @apply text-3xl font-sans-extrabold text-primary;
+        @apply text-2xl font-sans-bold text-primary;
     }
 
     .apps-subtitle {
@@ -226,7 +227,7 @@
     }
 
     .filter-chip {
-        @apply h-10 justify-center rounded-full border border-black/15 px-3.5;
+        @apply h-10 justify-center rounded-full border border-border bg-card px-3.5;
     }
 
     .filter-chip-active {
@@ -290,11 +291,11 @@
     }
 
     .detail-back {
-        @apply size-11 items-center justify-center rounded-full border border-black/15;
+        @apply size-11 items-center justify-center rounded-full border border-border bg-card;
     }
 
     .detail-title {
-        @apply mt-4 text-3xl font-sans-extrabold text-primary;
+        @apply mt-4 text-[26px] font-sans-bold text-primary;
     }
 
     .detail-subtitle {
@@ -302,27 +303,27 @@
     }
 
     .key-card {
-        @apply mt-4 flex-row items-center justify-between rounded-tl-lg rounded-tr-3xl rounded-br-lg rounded-bl-3xl bg-primary px-5 py-4;
+        @apply mt-4 flex-row items-center justify-between rounded-[18px] border border-border bg-card px-4 py-3.5;
     }
 
     .key-card-label {
-        @apply text-sm font-sans-semibold text-background/80;
+        @apply text-xs font-sans-semibold uppercase tracking-[1px] text-muted-foreground;
     }
 
     .key-card-value {
-        @apply text-lg font-sans-extrabold text-background;
+        @apply mt-0.5 text-lg font-sans-bold text-primary;
     }
 
     .key-card-badge {
-        @apply items-center rounded-2xl bg-accent px-3 py-2;
+        @apply items-center rounded-xl bg-accent px-3 py-2;
     }
 
     .key-card-badge-number {
-        @apply text-2xl font-sans-extrabold text-primary;
+        @apply text-2xl font-sans-extrabold text-white;
     }
 
     .key-card-badge-unit {
-        @apply text-xs font-sans-bold text-primary;
+        @apply text-xs font-sans-bold text-white;
     }
 
     .section-title {
@@ -378,19 +379,19 @@
     }
 
     .action-primary {
-        @apply h-13 flex-1 flex-row items-center justify-center gap-2 rounded-2xl bg-accent;
+        @apply h-13 flex-1 flex-row items-center justify-center gap-2 rounded-[14px] bg-primary;
     }
 
     .action-primary-text {
-        @apply text-base font-sans-extrabold text-primary;
+        @apply text-base font-sans-bold text-on-primary;
     }
 
     .action-secondary {
-        @apply h-13 flex-1 flex-row items-center justify-center gap-2 rounded-2xl border-2 border-primary;
+        @apply h-13 flex-1 flex-row items-center justify-center gap-2 rounded-[14px] border-[1.5px] border-primary bg-card;
     }
 
     .action-secondary-text {
-        @apply text-base font-sans-extrabold text-primary;
+        @apply text-base font-sans-bold text-primary;
     }
 
     .info-card {
@@ -442,11 +443,11 @@
     }
 
     .reminder-chip {
-        @apply h-10 justify-center rounded-full border border-black/20 px-3.5;
+        @apply h-10 justify-center rounded-full border border-border bg-card px-3.5;
     }
 
     .reminder-chip-on {
-        @apply border-accent bg-accent;
+        @apply border-accent bg-job;
     }
 
     .reminder-chip-text {
@@ -462,11 +463,11 @@
     }
 
     .timeline-dot {
-        @apply mt-1 size-3.5 rounded-full border-2 border-primary bg-primary;
+        @apply mt-1 size-3.5 rounded-full border-2 border-white bg-primary;
     }
 
     .timeline-line {
-        @apply min-h-6 w-0.5 flex-1 bg-black/20;
+        @apply min-h-6 w-1 flex-1 rounded-full bg-border;
     }
 
     .timeline-body {
@@ -532,7 +533,7 @@
     }
 
     .status-card {
-        @apply mt-4 gap-3 rounded-tl-lg rounded-tr-3xl rounded-br-lg rounded-bl-3xl p-5;
+        @apply mt-4 gap-3 rounded-[18px] border border-border bg-card p-4;
     }
 
     .status-head {
@@ -556,7 +557,7 @@
     }
 
     .status-action {
-        @apply h-11 flex-1 items-center justify-center rounded-2xl bg-primary;
+        @apply h-11 flex-1 items-center justify-center rounded-[14px] bg-primary;
     }
 
     .status-action-text {
@@ -564,11 +565,11 @@
     }
 
     .type-option {
-        @apply h-16 flex-1 items-center justify-center gap-1 rounded-2xl border-2 border-black/15;
+        @apply h-16 flex-1 items-center justify-center gap-1 rounded-[14px] border-[1.5px] border-border bg-card;
     }
 
     .type-option-active {
-        @apply border-primary;
+        @apply border-primary bg-card;
     }
 
     .type-option-text {
@@ -841,15 +842,15 @@
     }
 
     .auth-button {
-        @apply mt-1 items-center rounded-2xl bg-accent py-4;
+        @apply mt-1 items-center rounded-[14px] bg-primary py-4;
     }
 
     .auth-button-disabled {
-        @apply bg-accent/45;
+        @apply bg-primary/40;
     }
 
     .auth-button-text {
-        @apply text-base font-sans-bold text-primary;
+        @apply text-base font-sans-bold text-on-primary;
     }
 
     .auth-secondary-button {
@@ -957,7 +958,7 @@
     }
 
     .cal-month {
-        @apply text-2xl font-sans-extrabold text-primary;
+        @apply text-2xl font-sans-bold text-primary;
     }
 
     .cal-nav {
@@ -989,7 +990,7 @@
     }
 
     .cal-day-today {
-        @apply border-2 border-accent;
+        @apply border-2 border-primary;
     }
 
     .cal-day-selected {
@@ -1065,19 +1066,19 @@
     }
 
     .profile-hero {
-        @apply mt-4.5 items-center gap-1;
+        @apply flex-row items-center gap-3.5;
     }
 
     .profile-avatar {
-        @apply size-26 items-center justify-center overflow-hidden rounded-full border-3 border-accent bg-university;
+        @apply size-13 items-center justify-center overflow-hidden rounded-full bg-primary;
     }
 
     .profile-avatar-text {
-        @apply text-[34px] font-sans-extrabold text-primary;
+        @apply text-base font-sans-bold text-on-primary;
     }
 
     .profile-name {
-        @apply mt-2 text-[22px] font-sans-extrabold text-primary;
+        @apply text-lg font-sans-bold text-primary;
     }
 
     .profile-email {
@@ -1089,7 +1090,7 @@
     }
 
     .profile-stat {
-        @apply flex-1 gap-0.5 rounded-[20px] px-3 py-3.5;
+        @apply flex-1 gap-0.5 rounded-2xl border border-border bg-card px-3 py-3.5;
     }
 
     .profile-stat-value {
@@ -1097,19 +1098,19 @@
     }
 
     .profile-stat-label {
-        @apply text-xs font-sans-bold text-primary;
+        @apply text-xs font-sans-semibold text-muted-foreground;
     }
 
     .settings-card {
-        @apply mt-5 overflow-hidden rounded-3xl border border-border bg-card;
+        @apply mt-5 overflow-hidden rounded-[18px] border border-border bg-card;
     }
 
     .settings-row {
-        @apply min-h-15 flex-row items-center gap-3 px-4 py-2.5;
+        @apply min-h-15 flex-row items-center gap-3 px-4 py-3;
     }
 
     .settings-row-divider {
-        @apply border-b border-black/10;
+        @apply border-b border-border;
     }
 
     .settings-copy {
@@ -1117,7 +1118,7 @@
     }
 
     .settings-title {
-        @apply text-base font-sans-extrabold text-primary;
+        @apply text-base font-sans-bold text-primary;
     }
 
     .settings-detail {
@@ -1133,10 +1134,59 @@
     }
 
     .sign-out-button {
-        @apply mt-4 h-13 items-center justify-center rounded-[18px] border-[1.5px] border-primary;
+        @apply mt-4 h-13 items-center justify-center rounded-[14px] border-[1.5px] border-primary bg-card;
     }
 
     .sign-out-text {
-        @apply text-base font-sans-extrabold text-primary;
+        @apply text-base font-sans-bold text-primary;
+    }
+
+    /* Metro: departures board, line cards, profile card */
+    .board {
+        @apply rounded-[18px] border border-border bg-card px-4 pb-1.5 pt-3.5;
+    }
+
+    .board-head {
+        @apply flex-row items-center justify-between border-b border-border pb-2.5;
+    }
+
+    .board-label {
+        @apply text-[11px] font-sans-bold uppercase tracking-[1px] text-muted-foreground;
+    }
+
+    .board-row {
+        @apply flex-row items-center gap-2.5 border-b border-border py-2.5;
+    }
+
+    .board-when {
+        @apply w-13 text-[11px] font-sans-bold tracking-[0.5px] text-muted-foreground;
+    }
+
+    .line-card {
+        @apply rounded-[18px] border border-border bg-card p-3.5;
+    }
+
+    .see-all-button {
+        @apply mt-3 h-12 items-center justify-center rounded-[14px] border-[1.5px] border-primary bg-card;
+    }
+
+    .see-all-text {
+        @apply text-sm font-sans-bold text-primary;
+    }
+
+    .pass-card {
+        @apply mt-4 rounded-[20px] border border-border bg-card p-4.5;
+    }
+
+    .pass-foot {
+        @apply mt-4 flex-row items-center justify-between border-t border-border pt-3.5;
+    }
+
+    .line-pill {
+        @apply flex-row items-center gap-2 rounded-full border border-border bg-card py-1 pl-1 pr-3.5;
+    }
+
+    .line-pill-text {
+        @apply text-[13px] font-sans-bold text-primary;
     }
 }

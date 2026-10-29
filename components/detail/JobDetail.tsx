@@ -1,5 +1,5 @@
 import { View, Text, Image, Pressable } from 'react-native'
-import * as WebBrowser from 'expo-web-browser'
+import { openLink } from '@/lib/dialog'
 import dayjs, { type Dayjs } from 'dayjs'
 import { colors } from '@/constants/theme'
 import { icons } from '@/constants/icons'
@@ -68,7 +68,7 @@ const JobDetail = ({ job, now }: { job: JobApplication; now: Dayjs }) => {
 
       {job.link ? (
         <View className="detail-actions">
-          <Pressable className="action-primary" onPress={() => WebBrowser.openBrowserAsync(job.link!)} accessibilityRole="link">
+          <Pressable className="action-primary" onPress={() => openLink(job.link!)} accessibilityRole="link">
             <Image source={icons.link} className="size-4.5" tintColor={colors.primary} />
             <Text className="action-primary-text">Open circular</Text>
           </Pressable>
