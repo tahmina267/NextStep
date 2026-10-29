@@ -9,6 +9,8 @@ fields and reminders. An AI layer reads pasted job circulars to fill in the form
 questions about your saved applications using RAG (retrieval-augmented generation) with cited
 sources.
 
+**Live app:** https://nextstep-seven-alpha.vercel.app
+
 <!-- Add screenshots or a short demo GIF here, e.g. ![Home](docs/home.png) -->
 
 ---
